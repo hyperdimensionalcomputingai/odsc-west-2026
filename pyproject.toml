@@ -18,3 +18,13 @@ dev = [
     "nbclient>=0.10,<1",
     "pytest>=8,<10",
 ]
+
+# CPU-only torch on Linux, so installs don't pull multi-GB CUDA wheels.
+# macOS and Windows wheels on PyPI are already CPU-only.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

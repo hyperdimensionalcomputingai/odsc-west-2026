@@ -111,9 +111,14 @@ needed. `tests/test_notebooks.py` runs each notebook from a temp directory, so t
 `src/` on `PYTHONPATH` for the kernel. Keep that if you change how the notebooks import the
 module.
 
-On Linux, copy the CPU-only torch `[tool.uv.sources]` and `[[tool.uv.index]]` blocks from the
-R17 repo's `pyproject.toml`, so the install doesn't pull CUDA wheels. Run `uv lock` again
-afterwards.
+`pyproject.toml` points torch at the PyTorch CPU index on Linux only (`[tool.uv.sources]`
+with a `sys_platform == 'linux'` marker, plus an explicit `[[tool.uv.index]]`), so Linux
+installs don't pull CUDA wheels. macOS and Windows wheels on PyPI are already CPU-only.
+
+lance-graph 0.5.4 publishes a wheel only for Linux x86_64 with glibc 2.39+. Everywhere else
+`uv sync` builds it from source. A clean Linux build needs Rust 1.96 (1.99 fails on `ethnum`
+1.5.2), `protoc`, OpenSSL headers and `pkg-config`, and takes about 6 minutes on 10 cores.
+The README says so up front and gives install steps per platform.
 
 **Attendee setup (goes in the README, nothing else needed).**
 
@@ -238,7 +243,7 @@ markdown cell with its LaTeX, then 2 to 4 short code cells that show one propert
    with fixed IDs, but not for user input. A non-empty result means the path is confirmed.
 6. **When HDC guesses wrong (md + code).** Rebuild the codebook and G at a small dimension,
    for example `D = 64`, and ask "Where did R04 go?" again. Keep candidates above a score
-   threshold, for example 0.1. In the prototype (seed 0, D = 64), R04 and forklift came in
+   threshold, for example 0.05 (0.1 left a real aisle at 0.104 on Linux x86_64). In the prototype (seed 0, D = 64), R04 and forklift came in
    at ≈ 0.12 next to the real aisles. Validate every candidate with Cypher
    (`MATCH (r:Robot {id: 'R04'})-[:VISITED]->(a:Aisle {id: '<candidate>'}) RETURN a.id`)
    and print a table of candidate, HDC score, and whether the graph confirms it. The wrong
