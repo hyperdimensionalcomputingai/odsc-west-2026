@@ -4,7 +4,7 @@ import os
 
 os.environ.setdefault("LANCEDB_LOG", "error")  # hide LanceDB's first-write WARN; import this before lancedb
 
-from lance_graph import GraphConfig
+from lance_csr import GraphConfig
 
 NODES = {
     "Robot":    [{"id": "R17"}, {"id": "R04"}, {"id": "R11"}],
@@ -30,7 +30,10 @@ def write_graph(db):
 def graph_config():
     builder = GraphConfig.builder()
     for label in NODES:
-        builder = builder.with_node_label(label, "id")
-    for rel in EDGES:
-        builder = builder.with_relationship(rel, "src", "dst")
+        builder = builder.node_table(label, "id")
+    builder = (
+        builder.rel_table("VISITED", "Robot", "Aisle", "src", "dst")
+        .rel_table("HAS_HAZARD", "Aisle", "Hazard", "src", "dst")
+        .rel_table("HANDLED_BY", "Hazard", "Response", "src", "dst")
+    )
     return builder.build()

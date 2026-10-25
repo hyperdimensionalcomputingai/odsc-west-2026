@@ -3,7 +3,7 @@
 ## Goal
 
 A short, hands-on tutorial that goes with the talk slides. Attendees are new to both
-hyperdimensional computing (HDC) and lance-graph, so every cell must be small and readable.
+hyperdimensional computing (HDC) and lance-csr, so every cell must be small and readable.
 It teaches the three HDC operators (binding, bundling, permutation) with math in markdown
 cells and short code in Python cells. It uses one small graph, a warehouse trial taken
 from the R17 story, so the audience recognises the robots, aisles and hazards from the slides.
@@ -96,7 +96,7 @@ were verified together.
 
 ```bash
 uv init --app --python 3.12 --no-readme   # keep the existing README.md
-uv add "torch==2.6.0" "torch-hd==5.8.4" "lancedb==0.33.0" "lance-graph==0.5.4" \
+uv add "torch==2.6.0" "torch-hd==5.8.4" "lancedb==0.33.0" "lance-csr==0.2.0" \
        "pyarrow>=18,<25" "jupyterlab>=4,<5" "ipykernel>=6,<8"
 uv add --dev "pytest>=8,<10" "nbclient>=0.10,<1"
 ```
@@ -115,17 +115,16 @@ module.
 with a `sys_platform == 'linux'` marker, plus an explicit `[[tool.uv.index]]`), so Linux
 installs don't pull CUDA wheels. macOS and Windows wheels on PyPI are already CPU-only.
 
-lance-graph 0.5.4 publishes a wheel only for Linux x86_64 with glibc 2.39+. Everywhere else
-`uv sync` builds it from source. A clean Linux build needs Rust 1.96 (1.99 fails on `ethnum`
-1.5.2), `protoc`, OpenSSL headers and `pkg-config`, and takes about 6 minutes on 10 cores.
-The README says so up front and gives install steps per platform.
+lance-csr 0.2.0 publishes wheels for native macOS arm64 (macOS 11+) and Linux x86_64
+(glibc 2.28+). Use `uv sync --locked --no-build-package lance-csr` so attendee setup
+never falls back to a Rust source build. Other platforms are outside the wheel-based setup.
 
 **Attendee setup (goes in the README, nothing else needed).**
 
 ```bash
 # install uv once: https://docs.astral.sh/uv/getting-started/installation/
 git clone <repo-url> && cd odsc-west-2026
-uv sync
+uv sync --locked --no-build-package lance-csr
 uv run jupyter lab src/
 ```
 
@@ -140,8 +139,10 @@ Holds only what notebooks 2 and 3 need so they don't repeat notebook 1:
   above, as plain Python literals.
 - `write_graph(db)`: one LanceDB table per node label (column `id`), and one per
   relationship type (columns `src`, `dst`), all with `mode="overwrite"`.
-- `graph_config()`: `GraphConfig.builder()` with `.with_node_label(label, "id")` for each
-  label and `.with_relationship(rel, "src", "dst")` for each relationship type.
+- `graph_config()`: `GraphConfig.builder()` with `.node_table(label, "id")` for each
+  label and `.rel_table(rel, from_table, to_table, "src", "dst")` for each relationship
+  type: VISITED maps Robot to Aisle, HAS_HAZARD maps Aisle to Hazard, and HANDLED_BY maps
+  Hazard to Response.
 
 Notebook 1 writes these same steps out inline, because that is the lesson. The module must
 mirror them exactly. Notebooks 2 and 3 import from it.
@@ -150,7 +151,7 @@ LanceDB prints a Rust `WARN ... No existing dataset ... it will be created` line
 write. Silence it, for example by setting the Rust log level env var before importing
 lancedb (check which variable works), so beginners don't think something broke.
 
-## Notebook 1: a warehouse trial graph in LanceDB and lance-graph (~10 min)
+## Notebook 1: a warehouse trial graph in LanceDB and lance-csr (~10 min)
 
 1. **Intro (md).** Three robots, three aisles, three hazards, and the Act 3 story in four
    sentences. Include a small diagram of the graph: a mermaid block or a static PNG.
@@ -159,7 +160,7 @@ lancedb (check which variable works), so beginners don't think something broke.
    type. `lancedb.connect("warehouse.lancedb")`, `create_table(..., mode="overwrite")`.
    Print `db.table_names()`.
 4. **Read back as Arrow (code).** `db.open_table("VISITED").to_arrow()` and show it. Explain
-   in one sentence that lance-graph works directly on Arrow tables.
+   in one sentence that lance-csr works directly on Arrow tables.
 5. **Describe the graph shape (md + code).** Build `GraphConfig` and say which columns are IDs
    and which are edge endpoints.
 6. **First Cypher query (code).** Run a one-hop query and show the result:
