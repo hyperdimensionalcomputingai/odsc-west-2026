@@ -96,7 +96,7 @@ were verified together.
 
 ```bash
 uv init --app --python 3.12 --no-readme   # keep the existing README.md
-uv add "torch==2.6.0" "torch-hd==5.8.4" "lancedb==0.33.0" "lance-csr==0.2.0" \
+uv add "torch==2.6.0" "torch-hd==5.8.4" "lancedb==0.33.0" "lance-csr==0.3.1" \
        "pyarrow>=18,<25" "jupyterlab>=4,<5" "ipykernel>=6,<8"
 uv add --dev "pytest>=8,<10" "nbclient>=0.10,<1"
 ```
@@ -115,7 +115,7 @@ module.
 with a `sys_platform == 'linux'` marker, plus an explicit `[[tool.uv.index]]`), so Linux
 installs don't pull CUDA wheels. macOS and Windows wheels on PyPI are already CPU-only.
 
-lance-csr 0.2.0 publishes wheels for native macOS arm64 (macOS 11+) and Linux x86_64
+lance-csr 0.3.1 publishes wheels for native macOS arm64 (macOS 11+) and Linux x86_64
 (glibc 2.28+). Use `uv sync --locked --no-build-package lance-csr` so attendee setup
 never falls back to a Rust source build. Other platforms are outside the wheel-based setup.
 
